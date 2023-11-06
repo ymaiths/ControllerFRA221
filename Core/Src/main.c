@@ -59,15 +59,15 @@ struct _ButMtx_Struct BMX_L[4] = {
 struct _ButMtx_Struct BMX_R[3] = {
 		{GPIOB,GPIO_PIN_5},
 		{GPIOB,GPIO_PIN_4},
-		{GPIOB,GPIO_PIN_10},
+		{GPIOB,GPIO_PIN_10}
 };
 
 //int ID[12] = {1000000,0100000,0001000,0010000,0,0100000,0,0,0,0000100,1000000};
 uint16_t ButtonState = 0;
-int Memo[12];
-int j =0;
-uint8_t check = 0;
-int ID[12] = {100000,010000,000100,001000,1000000000,010000,1000000000,1000000000,1000000000,000010,100000};
+int Memo[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+uint8_t j = 0;
+uint8_t Check = 1;
+int ID[12] = {32,16,256,8,512,16,512,512,512,128,32,2048};
 //65340500026//
 /* USER CODE END PV */
 
@@ -127,7 +127,7 @@ int main(void)
 	  static uint32_t BTMX_TimeStamp = 0;
 	  if(HAL_GetTick() > BTMX_TimeStamp)
 	  {
-		  BTMX_TimeStamp = HAL_GetTick()+25;
+		  BTMX_TimeStamp = HAL_GetTick()+50;
 		  ButtonMatrixRead();
 	  }
   }
@@ -299,10 +299,15 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-//  if(GPIO_Pin == GPIO_PIN_13)
-//  {
-//	  HAL_GPIO_WritePin(LD2_Pin, GPIO_PIN_RESET);
-//  }
+  if(GPIO_Pin == GPIO_PIN_13)
+  {
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5,GPIO_PIN_RESET);
+		for(int i = 0; i < 12 ;i++){
+			Memo[i] = 0;
+		}
+		j = 0;
+		Check = 1;
+  }
 }
 
 void ButtonMatrixRead(){
@@ -314,8 +319,10 @@ void ButtonMatrixRead(){
 		{
 			ButtonState |= 1 << (X+(i*3));
 			Memo[j] = ButtonState;
-			j+1;
-			printf (Memo);
+			if (Memo[j] != ID[j]){
+					Check &= 0;
+				}
+			j += 1;
 
 		}
 		else
@@ -324,9 +331,11 @@ void ButtonMatrixRead(){
 		}
 	}
 
-	if (Memo == ID){
-		check = 1;
+	if (Check == 1 && Memo[11] == 2048){
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5,GPIO_PIN_SET);
+		Check = 3;
 	}
+
 
 	HAL_GPIO_WritePin(BMX_R[X].Port,BMX_R[X].Pin,GPIO_PIN_SET);
 
